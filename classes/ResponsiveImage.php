@@ -11,6 +11,7 @@ use OFFLINE\ResponsiveImages\Classes\Exceptions\FileNotFoundException;
 use OFFLINE\ResponsiveImages\Classes\Exceptions\RemotePathException;
 use OFFLINE\ResponsiveImages\Classes\Exceptions\UnallowedFileTypeException;
 use OFFLINE\ResponsiveImages\Models\Settings;
+use WebPConvert\WebPConvert;
 use URL;
 
 /**
@@ -52,6 +53,12 @@ class ResponsiveImage
      * @var SourceSet
      */
     protected $sourceSet;
+    /**
+     * Where the various webp copies of the image saved.
+     *
+     * @var SourceSet
+     */
+    protected $sourceSetWebp;
     /**
      * ImageResizer instance.
      *
@@ -104,6 +111,7 @@ class ResponsiveImage
         $this->parseImagePath();
 
         $this->sourceSet = new SourceSet($this->path, $this->getWidth());
+        $this->sourceSetWebp = new SourceSet($this->path, $this->getWidth());
 
         $this->dimensions[] = $this->getWidth();
         $this->createCopies();
@@ -138,6 +146,17 @@ class ResponsiveImage
     }
 
     /**
+     * Returns an associative array of all available
+     * webp image sizes and their storage locations.
+     *
+     * @return SourceSet
+     */
+    public function getSourceSetWebp()
+    {
+        return $this->sourceSetWebp;
+    }
+
+    /**
      * Creates the non existent copies of the image.
      *
      * @return bool
@@ -145,6 +164,7 @@ class ResponsiveImage
     protected function createCopies()
     {
         $unavailableSizes = $this->getUnavailableSizes();
+        $unavailableSizesWebp = $this->getUnavailableSizesWebp();
 
         // Only create ImageResizer if there are copies to be made.
         if (count($unavailableSizes) < 1) {
@@ -168,20 +188,55 @@ class ResponsiveImage
         // Only scale the image down
         if ($this->resizer->getWidth() < $size) {
             $this->sourceSet->remove($size);
+            $this->sourceSetWebp->remove($size);
 
             return;
         }
 
         try {
-            $this->resizer->resize($size, null)->save($this->getStoragePath($size));
+            $this->resizer->resize($size, null)->save($path=$this->getStoragePath($size));
+
+            try {
+                $webpSuccess = WebPConvert::convert($path, $this->getStoragePathWebp($size), [
+                    'quality' => 75,
+                    'converters' => ['cwebp', 'gd', 'imagick' ],
+                ]);
+
+                if (!$webpSuccess) {
+                    $this->sourceSetWebp->remove($size);
+                }
+            } catch (\Exception $e) {
+                $this->sourceSetWebp->remove($size);
+            }
+
         } catch (\Exception $e) {
             // Cannot resize image to this size. Remove it from the srcset.
             $this->sourceSet->remove($size);
+            $this->sourceSetWebp->remove($size);
 
             if (Settings::get('log_unprocessable', false)) {
                 Log::warning(sprintf('Failed to create size "%s" for image "%s"', $size, $this->path));
             }
         }
+    }
+
+
+    /**
+     * Returns the webp version of a given a storage path
+
+     * @param  $storagePath
+     * @return string
+     */
+    protected function getStoragePathWebp($size)
+    {
+        $storagePath = $this->getStoragePath($size);
+
+        $fileInfo = pathinfo($storagePath);
+        $pathWebp = $fileInfo['dirname'].'/'.$fileInfo['filename'].'.webp';
+
+        $this->sourceSetWebp->push($size, $pathWebp);
+
+        return $pathWebp;
     }
 
     /**
@@ -240,6 +295,25 @@ class ResponsiveImage
 
         foreach ($this->dimensions as $size) {
             if ( ! file_exists($this->getStoragePath($size))) {
+                $unavailableSizes[] = $size;
+            }
+        }
+
+        return $unavailableSizes;
+    }
+
+
+    /**
+     * Returns an array of all non-existent image copies of webp versions
+     *
+     * @return array
+     */
+    protected function getUnavailableSizesWebp()
+    {
+        $unavailableSizes = [];
+
+        foreach ($this->dimensions as $size) {
+            if ( ! file_exists($this->getStoragePathWebp($this->getStoragePath($size))) ){
                 $unavailableSizes[] = $size;
             }
         }
