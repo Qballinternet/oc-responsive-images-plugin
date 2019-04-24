@@ -313,7 +313,7 @@ class ResponsiveImage
         $unavailableSizes = [];
 
         foreach ($this->dimensions as $size) {
-            if ( ! file_exists($this->getStoragePathWebp($this->getStoragePath($size))) ){
+            if ( ! file_exists($this->getStoragePathWebp($size)) ){
                 $unavailableSizes[] = $size;
             }
         }
