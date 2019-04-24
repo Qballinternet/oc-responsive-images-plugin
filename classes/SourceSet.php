@@ -29,7 +29,9 @@ class SourceSet
     {
         $this->originalWidth = $originalWidth;
 
-        $this->push($originalWidth, $originalPath);
+        if ($originalPath) {
+            $this->push($originalWidth, $originalPath);
+        }
     }
 
     /**

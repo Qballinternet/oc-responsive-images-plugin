@@ -111,7 +111,7 @@ class ResponsiveImage
         $this->parseImagePath();
 
         $this->sourceSet = new SourceSet($this->path, $this->getWidth());
-        $this->sourceSetWebp = new SourceSet($this->path, $this->getWidth());
+        $this->sourceSetWebp = new SourceSet(null, $this->getWidth());
 
         $this->dimensions[] = $this->getWidth();
         $this->createCopies();
@@ -234,7 +234,9 @@ class ResponsiveImage
         $fileInfo = pathinfo($storagePath);
         $pathWebp = $fileInfo['dirname'].'/'.$fileInfo['filename'].'.webp';
 
-        $this->sourceSetWebp->push($size, $pathWebp);
+        if (file_exists($pathWebp)) {
+            $this->sourceSetWebp->push($size, $pathWebp);
+        }
 
         return $pathWebp;
     }

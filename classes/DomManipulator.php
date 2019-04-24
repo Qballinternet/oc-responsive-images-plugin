@@ -92,19 +92,23 @@ class DomManipulator
             $this->setSrcAttribute($node, $sourceSet);
 
 
-            if (preg_match('/download/i', $matches[0])) {
-                $sourceSetWebp = $responsiveImage->getSourceSetWebp();
+            $sourceSetWebp = $responsiveImage->getSourceSetWebp();
+            if ($sourceSetWebp->getSrcSetAttribute()) {
                 $nodePicture = $this->dom->createElement('picture');
                 $nodeSource = $this->dom->createElement('source');
+                $nodeSource->setAttribute('type', 'image/webp');
                 $nodePicture->appendChild($nodeSource);
                 $nodePicture->appendChild($node);
                 $this->setSrcSetAttribute($nodeSource, $sourceSetWebp);
+
+                return $node->ownerDocument->saveHTML($nodePicture);
+            } else {
+                return $node->ownerDocument->saveHTML($node);
             }
 
 
 
 
-            return $node->ownerDocument->saveHTML($node);
         };
     }
 
