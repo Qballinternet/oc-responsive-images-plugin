@@ -151,8 +151,6 @@ class ResponsiveImage
             return false;
         }
 
-        $this->resizer = new ImageResizer($this->path);
-
         foreach ($this->getUnavailableSizes() as $size) {
             $this->createCopy($size);
         }
@@ -165,6 +163,8 @@ class ResponsiveImage
      */
     protected function createCopy($size)
     {
+        $this->resizer = new ImageResizer($this->path);
+
         // Only scale the image down
         if ($this->resizer->getWidth() < $size) {
             $this->sourceSet->remove($size);
