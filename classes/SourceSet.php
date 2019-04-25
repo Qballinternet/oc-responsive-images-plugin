@@ -99,8 +99,8 @@ class SourceSet
 
         foreach ($this->rules as $size => $paths) {
             $attribute[] = sprintf(
-                '%s %sw', $paths['public_url'],
-                $omitWidth ? '' : $size
+                '%s%s', $paths['public_url'],
+                $omitWidth ? '' : " $size".'w'
             );
         }
 
