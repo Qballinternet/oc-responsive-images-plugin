@@ -92,12 +92,16 @@ class SourceSet
      *
      * @return string
      */
-    public function getSrcSetAttribute()
+    public function getSrcSetAttribute($omitWidthOnSingleSize=false)
     {
         $attribute = [];
+        $omitWidth = ($omitWidthOnSingleSize AND count($this->rules) === 1);
 
         foreach ($this->rules as $size => $paths) {
-            $attribute[] = sprintf('%s %sw', $paths['public_url'], $size);
+            $attribute[] = sprintf(
+                '%s %sw', $paths['public_url'],
+                $omitWidth ? '' : $size
+            );
         }
 
         return implode($attribute, ', ');

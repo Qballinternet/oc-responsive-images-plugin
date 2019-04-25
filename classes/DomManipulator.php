@@ -99,7 +99,7 @@ class DomManipulator
                 $nodeSource->setAttribute('type', 'image/webp');
                 $nodePicture->appendChild($nodeSource);
                 $nodePicture->appendChild($node);
-                $this->setSrcSetAttribute($nodeSource, $sourceSetWebp);
+                $this->setSrcSetAttributeWebp($nodeSource, $sourceSetWebp);
 
                 return $node->ownerDocument->saveHTML($nodePicture);
             } else {
@@ -183,6 +183,19 @@ class DomManipulator
 
         $node->setAttribute($targetAttribute, $sourceSet->getSrcSetAttribute());
     }
+
+    /**
+     * Set the srcset attribute for webp
+     *
+     * @param $node
+     * @param $sourceSet
+     */
+    protected function setSrcSetAttributeWebp(\DOMElement $node, SourceSet $sourceSet)
+    {
+        // Omit width on a single item. This fixes a render bug in Google Chrome
+        $node->setAttribute('srcset', $sourceSet->getSrcSetAttribute(true));
+    }
+
 
     /**
      * Set the class attribute.
