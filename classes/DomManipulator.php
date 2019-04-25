@@ -92,6 +92,11 @@ class DomManipulator
             $this->setSrcAttribute($node, $sourceSet);
 
 
+            // TODO: Extend regex matching so we only match img elements that are
+            //       not enclosed by <picture> and <source> tags. These are
+            //       already optimized and should not be processed by the code
+            //       below in the same matter that the code above checks for
+            //       existing srcset attributes
             $sourceSetWebp = $responsiveImage->getSourceSetWebp();
             if ($sourceSetWebp->getSrcSetAttribute()) {
                 $nodePicture = $this->dom->createElement('picture');
