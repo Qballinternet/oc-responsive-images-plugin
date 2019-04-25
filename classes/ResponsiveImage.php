@@ -167,16 +167,16 @@ class ResponsiveImage
         $unavailableSizesWebp = $this->getUnavailableSizesWebp();
 
         // Only create ImageResizer if there are copies to be made.
-        if (count($unavailableSizes) < 1) {
-            return false;
+        if (count($unavailableSizes) > 0) {
+            foreach ($unavailableSizes as $size) {
+                $this->createCopy($size);
+            }
         }
 
-        foreach ($unavailableSizes as $size) {
-            $this->createCopy($size);
-        }
-
-        foreach ($unavailableSizesWebp as $size) {
-            $this->createCopyWebp($size);
+        if (count($unavailableSizesWebp) > 0) {
+            foreach ($unavailableSizesWebp as $size) {
+                $this->createCopyWebp($size);
+            }
         }
     }
 
