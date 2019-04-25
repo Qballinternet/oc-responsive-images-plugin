@@ -194,15 +194,21 @@ class ResponsiveImage
         }
 
         try {
-            $this->resizer->resize($size, null)->save($path=$this->getStoragePath($size));
+            $storagePath=$this->getStoragePath($size);
+
+            $this->resizer->resize($size, null)->save($storagePath);
+            $this->sourceSet->push($size, $storagePath);
 
             try {
-                $webpSuccess = WebPConvert::convert($path, $this->getStoragePathWebp($size), [
+                $storagePathWebp = $this->getStoragePathWebp($size);
+                $webpSuccess = WebPConvert::convert($storagePath, $storagePathWebp, [
                     'quality' => 75,
                     'converters' => ['cwebp', 'gd', 'imagick' ],
                 ]);
 
-                if (!$webpSuccess) {
+                if ($webpSuccess) {
+                    $this->sourceSetWebp->push($size, $storagePathWebp);
+                } else {
                     $this->sourceSetWebp->remove($size);
                 }
             } catch (\Exception $e) {
@@ -232,11 +238,9 @@ class ResponsiveImage
         $storagePath = $this->getStoragePath($size);
 
         $fileInfo = pathinfo($storagePath);
-        $pathWebp = $fileInfo['dirname'].'/'.$fileInfo['filename'].'.webp';
+        $storagePathWebp = $fileInfo['dirname'].'/'.$fileInfo['filename'].'.webp';
 
-        $this->sourceSetWebp->push($size, $pathWebp);
-
-        return $pathWebp;
+        return $storagePathWebp;
     }
 
     /**
@@ -254,8 +258,6 @@ class ResponsiveImage
         }
 
         $storagePath = $path . $this->getStorageFilename($size);
-
-        $this->sourceSet->push($size, $storagePath);
 
         return $storagePath;
     }
@@ -294,8 +296,11 @@ class ResponsiveImage
         $unavailableSizes = [];
 
         foreach ($this->dimensions as $size) {
-            if ( ! file_exists($this->getStoragePath($size))) {
+            $storagePath = $this->getStoragePath($size);
+            if ( ! file_exists($storagePath)) {
                 $unavailableSizes[] = $size;
+            } else {
+                $this->sourceSet->push($size, $storagePath);
             }
         }
 
@@ -313,8 +318,11 @@ class ResponsiveImage
         $unavailableSizes = [];
 
         foreach ($this->dimensions as $size) {
-            if ( ! file_exists($this->getStoragePathWebp($size)) ){
+            $storagePath = $this->getStoragePathWebp($size);
+            if ( ! file_exists($storagePath) ){
                 $unavailableSizes[] = $size;
+            } else {
+                $this->sourceSetWebp->push($size, $storagePath);
             }
         }
 
