@@ -171,8 +171,12 @@ class ResponsiveImage
             return false;
         }
 
-        foreach ($this->getUnavailableSizes() as $size) {
+        foreach ($unavailableSizes as $size) {
             $this->createCopy($size);
+        }
+
+        foreach ($unavailableSizesWebp as $size) {
+            $this->createCopyWebp($size);
         }
     }
 
@@ -188,42 +192,57 @@ class ResponsiveImage
         // Only scale the image down
         if ($this->resizer->getWidth() < $size) {
             $this->sourceSet->remove($size);
-            $this->sourceSetWebp->remove($size);
-
             return;
         }
 
         try {
-            $storagePath=$this->getStoragePath($size);
+            $storagePath = $this->getStoragePath($size);
 
             $this->resizer->resize($size, null)->save($storagePath);
             $this->sourceSet->push($size, $storagePath);
-
-            try {
-                $storagePathWebp = $this->getStoragePathWebp($size);
-                $webpSuccess = WebPConvert::convert($storagePath, $storagePathWebp, [
-                    'quality' => 75,
-                    'converters' => ['cwebp', 'gd', 'imagick' ],
-                ]);
-
-                if ($webpSuccess) {
-                    $this->sourceSetWebp->push($size, $storagePathWebp);
-                } else {
-                    $this->sourceSetWebp->remove($size);
-                }
-            } catch (\Exception $e) {
-                $this->sourceSetWebp->remove($size);
-            }
-
         } catch (\Exception $e) {
             // Cannot resize image to this size. Remove it from the srcset.
             $this->sourceSet->remove($size);
-            $this->sourceSetWebp->remove($size);
 
             if (Settings::get('log_unprocessable', false)) {
                 Log::warning(sprintf('Failed to create size "%s" for image "%s"', $size, $this->path));
             }
         }
+    }
+
+    /**
+     * Create a copy of the image for $size.
+     *
+     * @param $size
+     */
+    protected function createCopyWebp($size)
+    {
+        // Only scale the image down
+        if ($this->getWidth() < $size) {
+            $this->sourceSetWebp->remove($size);
+            return;
+        }
+        try {
+            $storagePath = $this->getStoragePath($size);
+            $storagePathWebp = $this->getStoragePathWebp($size);
+            $webpSuccess = WebPConvert::convert($storagePath, $storagePathWebp, [
+                'quality' => 75,
+                'converters' => ['cwebp', 'gd', 'imagick' ],
+            ]);
+
+            if ($webpSuccess) {
+                $this->sourceSetWebp->push($size, $storagePathWebp);
+            } else {
+                $this->sourceSetWebp->remove($size);
+            }
+        } catch (\Exception $e) {
+            $this->sourceSetWebp->remove($size);
+
+            if (Settings::get('log_unprocessable', false)) {
+                Log::warning(sprintf('Failed to create webp size "%s" for image "%s"', $size, $this->path));
+            }
+        }
+
     }
 
 
