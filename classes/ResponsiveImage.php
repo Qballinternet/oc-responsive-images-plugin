@@ -187,15 +187,14 @@ class ResponsiveImage
      */
     protected function createCopy($size)
     {
-        $this->resizer = new ImageResizer($this->path);
-
         // Only scale the image down
-        if ($this->resizer->getWidth() < $size) {
+        if ($this->getWidth() < $size) {
             $this->sourceSet->remove($size);
             return;
         }
 
         try {
+            $this->resizer = new ImageResizer($this->path);
             $storagePath = $this->getStoragePath($size);
 
             $this->resizer->resize($size, null)->save($storagePath);
