@@ -234,9 +234,7 @@ class ResponsiveImage
         $fileInfo = pathinfo($storagePath);
         $pathWebp = $fileInfo['dirname'].'/'.$fileInfo['filename'].'.webp';
 
-        if (file_exists($pathWebp)) {
-            $this->sourceSetWebp->push($size, $pathWebp);
-        }
+        $this->sourceSetWebp->push($size, $pathWebp);
 
         return $pathWebp;
     }
