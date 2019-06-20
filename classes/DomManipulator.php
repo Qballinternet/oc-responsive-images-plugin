@@ -76,6 +76,11 @@ class DomManipulator
     protected function replaceCallback()
     {
         return function ($matches) {
+            if (preg_match('/img-responsive-ignore/i', $matches[0])) {
+                // The processing of the image failed return original tag.
+                return $matches[0];
+            }
+
             $node   = $this->loadImageTag($matches[0]);
             $source = $this->getSrcAttribute($node);
 
