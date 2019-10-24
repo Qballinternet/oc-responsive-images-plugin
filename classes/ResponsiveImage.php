@@ -225,7 +225,7 @@ class ResponsiveImage
             $storagePath = $this->getStoragePath($size);
             $storagePathWebp = $this->getStoragePathWebp($size);
             $webpSuccess = WebPConvert::convert($storagePath, $storagePathWebp, [
-                'quality' => 75,
+                'quality' => 90,
                 'converters' => ['cwebp', 'gd', 'imagick' ],
             ]);
 
